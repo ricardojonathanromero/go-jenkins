@@ -1,0 +1,297 @@
+openapi: 3.0.3
+info:
+  title: Customers API
+  description: Customer API
+  version: 1.0.0
+tags:
+  - name: Customers
+    description: "Services used for lookup, aggregate or modify customers"
+servers:
+  - description: 'local'
+    url: http://localhost:8090
+paths:
+  /api/v1/customers:
+    post:
+      description: "This method create a new customer"
+      summary: 'Creates a new user'
+      tags:
+        - Customers
+      responses:
+        201:
+          description: 'Create a new customer in database'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/customer"
+              examples:
+                success:
+                  $ref: '#/components/examples/createCustomerSuccess'
+        400:
+          description: 'The request has invalid params or values'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/commonError'
+              examples:
+                emptyBody:
+                  $ref: '#/components/examples/createCustomerEmptyBody'
+                invalidPayload:
+                  $ref: '#/components/examples/createCustomerInvalidPayload'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/customerReq"
+            examples:
+              request:
+                $ref: '#/components/examples/customerReq'
+    get:
+      description: 'This method will be returns a list of customers'
+      summary: 'List of customers'
+      tags:
+        - Customers
+      responses:
+        200:
+          description: 'Return a list of customers'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/customers'
+                additionalProperties: false
+                required:
+                  - status
+                  - data
+              examples:
+                success:
+                  $ref: '#/components/examples/customerList'
+  /api/v1/customers/:customerID:
+    get:
+      tags:
+        - Customers
+      description: 'Returns a customer filtering by ID'
+      summary: 'Return the customer info'
+      parameters:
+        - name: 'customerID'
+          required: true
+          description: 'The customer id to find'
+          in: path
+          example: '609a6a239bef35d280bed122'
+      responses:
+        200:
+          description: 'Success response'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/customer"
+              examples:
+                success:
+                  $ref: '#/components/examples/createCustomerSuccess'
+        400:
+          description: 'The customer ID is not valid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/commonError'
+              example:
+                status: 'fail'
+                data:
+                  code: 'invalid_request_params'
+                  message: 'The customerID must be a valid ID'
+                  source: 'api.validations.path'
+        404:
+          description: 'The customer ID could not be founded or not exists'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/commonError'
+              example:
+                status: 'fail'
+                data:
+                  code: 'invalid_request_params'
+                  message: 'customer not found'
+                  source: 'api.customers'
+    patch:
+      description: 'This method is used to update the customer information registered previously or modify an existed information'
+      tags:
+        - Customers
+      summary: 'Method for update customer information'
+      parameters:
+        - in: header
+          description: 'The customer id to update'
+          required: true
+          example: '609a6a239bef35d280bed122'
+          name: 'customerID'
+      requestBody:
+        required: true
+        description: 'Fields to update'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/customer'
+            examples:
+              request:
+                $ref: '#/components/examples/customerReq'
+      responses:
+        202:
+          description: 'Success response'
+        400:
+          description: 'The customer ID is not valid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/commonError'
+              examples:
+                invalidCustomerID:
+                  description: 'Invalid customer ID'
+                  value:
+                    status: 'fail'
+                    data:
+                      code: 'invalid_request_params'
+                      message: 'The customerID must be a valid ID'
+                      source: 'api.validations.path'
+                emptyBody:
+                  $ref: '#/components/examples/createCustomerEmptyBody'
+                invalidPayload:
+                   $ref: '#/components/examples/createCustomerInvalidPayload'
+        409:
+          description: 'The customer info could not be updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/commonError'
+              example:
+                status: 'fail'
+                data:
+                  code: 'customer_not_updated'
+                  message: 'customer not updated'
+                  source: 'api.customers'
+components:
+  schemas:
+    customerReq:
+      type: object
+      properties:
+        name:
+          type: string
+        lastname:
+          type: string
+        age:
+          type: number
+        email:
+          type: string
+          format: email
+        gender:
+          enum:
+            - male
+            - female
+      additionalProperties: false
+      required:
+        - name
+        - lastname
+        - age
+        - email
+    customer:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        lastname:
+          type: string
+        age:
+          type: number
+        email:
+          type: string
+          format: email
+        gender:
+          enum:
+            - male
+            - female
+      additionalProperties: false
+      required:
+        - name
+        - lastname
+        - age
+        - email
+    customers:
+      type: array
+      items:
+        $ref: "#/components/schemas/customer"
+      minItems: 0
+      additionalProperties: false
+    commonError:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            source:
+              type: string
+          additionalProperties: false
+          required:
+            - code
+            - message
+            - source
+      additionalProperties: false
+      required:
+        - status
+        - data
+  examples:
+    customerReq:
+      description: 'Example of a customer created successfully'
+      value:
+        name: "Fogel"
+        lastname: "McLovin"
+        age: 26
+        email: 'mclovin@mail.com'
+        gender: 'male'
+    createCustomerEmptyBody:
+      description: 'This scenario will be passed when the request is empty'
+      value:
+        status: 'fail'
+        data:
+          code: "bad_request"
+          error: "Request body can't be empty"
+          source: "api.validations.body"
+      summary: 'Empty request'
+    createCustomerInvalidPayload:
+      description: 'This scenario will be passed when the request does not have all required params'
+      value:
+        status: 'fail'
+        data:
+          code: "invalid_param_values"
+          error: "Key: 'Customer.Name' Error:Field validation for 'Name' failed on the 'required' tag\nKey: 'Customer.Lastname' Error:Field validation for 'Lastname' failed on the 'required' tag\nKey: 'Customer.Age' Error:Field validation for 'Age' failed on the 'required' tag\nKey: 'Customer.Email' Error:Field validation for 'Email' failed on the 'email' tag"
+          source: "api.validations.payload"
+      summary: 'Invalid request'
+    createCustomerSuccess:
+      description: 'Example of a customer created successfully'
+      value:
+        status: 'success'
+        data:
+          id: "609a6a239bef35d280bed122"
+          name: "Fogel"
+          lastname: "McLovin"
+          age: 26
+          email: 'mclovin@mail.com'
+          gender: 'male'
+    customerList:
+      description: 'return a lis of customers'
+      value:
+        status: 'success'
+        data:
+          - name: "Fogel"
+            lastname: "McLovin"
+            age: 26
+            email: 'mclovin@mail.com'
+            gender: 'male'
