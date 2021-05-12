@@ -5,7 +5,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Testing..'
-                sh 'sudo apt-get install build-essential'
+                sh 'echo | sudo -S apt-get install build-essential'
                 sh 'make cli-integration-test'
             }
         }
